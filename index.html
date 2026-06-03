@@ -6,6 +6,39 @@
     <title>Reading list</title>
     <meta name="robots" content="noindex" />
     <style>
+      /* Valley Sans (SIL OFL). "Medium" stands in for every bold weight;
+         Regular/Italic carry everything else. font-synthesis:none below
+         stops the browser from faking bolds or slants. */
+      @font-face {
+        font-family: "Valley Sans";
+        src: url("/assets/fonts/ValleySans-Regular.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Valley Sans";
+        src: url("/assets/fonts/ValleySans-Italic.woff2") format("woff2");
+        font-weight: 400;
+        font-style: italic;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Valley Sans";
+        src: url("/assets/fonts/ValleySans-Medium.woff2") format("woff2");
+        /* Range so any "bold" (500–900) resolves to Medium, never heavier. */
+        font-weight: 500 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "Valley Sans";
+        src: url("/assets/fonts/ValleySans-MediumItalic.woff2") format("woff2");
+        font-weight: 500 900;
+        font-style: italic;
+        font-display: swap;
+      }
+
       :root {
         --ink: #1a1a1a;
         --muted: #6b6b6b;
@@ -28,9 +61,10 @@
         margin: 0;
         background: var(--bg);
         color: var(--ink);
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-family: "Valley Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
         font-size: 16px;
         line-height: 1.5;
+        font-synthesis: none;
         -webkit-font-smoothing: antialiased;
       }
 
@@ -83,6 +117,48 @@
         color: var(--faint);
         font-size: 13px;
         white-space: nowrap;
+      }
+
+      .refresh {
+        flex: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font: inherit;
+        font-size: 13px;
+        color: var(--muted);
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 9px 12px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: border-color 0.15s ease, color 0.15s ease;
+      }
+
+      .refresh:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .refresh:disabled {
+        cursor: default;
+        opacity: 0.6;
+      }
+
+      .refresh svg {
+        width: 14px;
+        height: 14px;
+      }
+
+      .refresh.loading svg {
+        animation: spin 0.7s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .group-year {
@@ -218,6 +294,13 @@
       <div class="controls" hidden id="controls">
         <input type="search" id="search" placeholder="Filter by title, author, journal, tag…" autocomplete="off" />
         <span class="count" id="count"></span>
+        <button class="refresh" id="refresh" type="button" title="Fetch the latest from Zotero (bypasses cache)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
+            <path d="M21 3v6h-6" />
+          </svg>
+          <span>Reload</span>
+        </button>
       </div>
 
       <main id="list">
@@ -240,6 +323,7 @@
       const countEl = document.getElementById("count");
       const controlsEl = document.getElementById("controls");
       const searchEl = document.getElementById("search");
+      const refreshEl = document.getElementById("refresh");
 
       let allItems = [];
 
@@ -368,31 +452,51 @@
           .every((term) => hay.includes(term));
       }
 
-      searchEl.addEventListener("input", () => {
+      function applyFilter() {
         const q = searchEl.value.trim();
         render(allItems.filter((it) => matches(it, q)));
+      }
+
+      searchEl.addEventListener("input", applyFilter);
+
+      async function load({ force = false } = {}) {
+        // A unique query param + no-store busts both the browser cache and
+        // Vercel's edge cache, so "Reload" pulls fresh data straight from Zotero.
+        const url = force ? `/api/items?refresh=${Date.now()}` : "/api/items";
+        const res = await fetch(url, force ? { cache: "no-store" } : undefined);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `Request failed (${res.status})`);
+        }
+        const data = await res.json();
+        allItems = data.items || [];
+        controlsEl.hidden = false;
+        applyFilter();
+      }
+
+      refreshEl.addEventListener("click", async () => {
+        refreshEl.disabled = true;
+        refreshEl.classList.add("loading");
+        try {
+          await load({ force: true });
+        } catch (e) {
+          countEl.textContent = "Reload failed";
+        } finally {
+          refreshEl.disabled = false;
+          refreshEl.classList.remove("loading");
+        }
       });
 
-      async function load() {
+      (async () => {
         try {
-          const res = await fetch("/api/items");
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || `Request failed (${res.status})`);
-          }
-          const data = await res.json();
-          allItems = data.items || [];
-          controlsEl.hidden = allItems.length === 0;
-          render(allItems);
+          await load();
         } catch (e) {
           listEl.innerHTML = "";
           listEl.append(
             el("div", { class: "state" }, "Couldn't load references. " + e.message)
           );
         }
-      }
-
-      load();
+      })();
     </script>
   </body>
 </html>

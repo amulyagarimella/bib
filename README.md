@@ -9,8 +9,9 @@ A read-only Zotero API key lives server-side in a Vercel serverless function
 collection you configured — never the key, your username, or the rest of your library.
 
 ```
-index.html        static frontend (Helvetica Neue, client-side filter)
-api/items.js       serverless proxy; holds the key, recurses + flattens one collection tree
+index.html         static frontend (Valley Sans, client-side filter, reload button)
+api/items.js        serverless proxy; holds the key, recurses + flattens one collection tree
+assets/fonts/       bundled Valley Sans woff2 (SIL OFL — see OFL.txt)
 .env.example       the three values you need to set
 ```
 
@@ -57,6 +58,11 @@ vercel --prod
   near the bottom of `index.html`.
 - Responses are cached at Vercel's edge for 10 minutes
   (`s-maxage=600, stale-while-revalidate=3600`) to stay well under Zotero's rate limits.
+  The **Reload** button bypasses that cache (unique query param + `no-store`) to pull
+  fresh data straight from Zotero on demand.
+- The page is set in **Valley Sans** (bundled woff2, SIL Open Font License). "Medium"
+  is mapped to every bold weight; Regular/Italic cover the rest, with `font-synthesis: none`
+  so the browser never fakes a weight or slant.
 - `<meta name="robots" content="noindex">` discourages search engines. This is
   "unlisted," not access-controlled — anyone with the URL can view it. If you need
   real auth, put it behind Vercel password protection or add a check in `api/items.js`.
