@@ -1,7 +1,10 @@
 {
   "name": "bib",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Share a single private Zotero collection via a Vercel serverless proxy."
+  "description": "Share selected private Zotero collections as unlisted links via Vercel.",
+  "dependencies": {
+    "@upstash/redis": "^1.34.0"
+  }
 }

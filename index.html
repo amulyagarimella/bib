@@ -3,12 +3,9 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Reading list</title>
+    <title>Shared collections</title>
     <meta name="robots" content="noindex" />
     <style>
-      /* Valley Sans (SIL OFL). "Medium" stands in for every bold weight;
-         Regular/Italic carry everything else. font-synthesis:none below
-         stops the browser from faking bolds or slants. */
       @font-face {
         font-family: "Valley Sans";
         src: url("/assets/fonts/ValleySans-Regular.woff2") format("woff2");
@@ -26,16 +23,8 @@
       @font-face {
         font-family: "Valley Sans";
         src: url("/assets/fonts/ValleySans-Medium.woff2") format("woff2");
-        /* Range so any "bold" (500–900) resolves to Medium, never heavier. */
         font-weight: 500 900;
         font-style: normal;
-        font-display: swap;
-      }
-      @font-face {
-        font-family: "Valley Sans";
-        src: url("/assets/fonts/ValleySans-MediumItalic.woff2") format("woff2");
-        font-weight: 500 900;
-        font-style: italic;
         font-display: swap;
       }
 
@@ -46,15 +35,11 @@
         --line: #e6e6e6;
         --accent: #0b4f9c;
         --bg: #fbfbfa;
-        --max: 760px;
+        --max: 720px;
       }
 
       * {
         box-sizing: border-box;
-      }
-
-      html {
-        -webkit-text-size-adjust: 100%;
       }
 
       body {
@@ -74,10 +59,6 @@
         padding: 64px 24px 96px;
       }
 
-      header.page {
-        margin-bottom: 36px;
-      }
-
       h1 {
         font-size: 28px;
         font-weight: 600;
@@ -88,190 +69,160 @@
       .subtitle {
         color: var(--muted);
         font-size: 15px;
-        margin: 0;
+        margin: 0 0 36px;
       }
 
-      .controls {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin: 28px 0 8px;
-      }
-
-      input[type="search"] {
-        flex: 1;
-        font: inherit;
-        padding: 9px 12px;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: #fff;
-        color: var(--ink);
-      }
-
-      input[type="search"]:focus {
-        outline: none;
-        border-color: var(--accent);
-      }
-
-      .count {
-        color: var(--faint);
-        font-size: 13px;
-        white-space: nowrap;
-      }
-
-      .refresh {
-        flex: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font: inherit;
-        font-size: 13px;
-        color: var(--muted);
-        background: #fff;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        padding: 9px 12px;
-        cursor: pointer;
-        white-space: nowrap;
-        transition: border-color 0.15s ease, color 0.15s ease;
-      }
-
-      .refresh:hover:not(:disabled) {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-
-      .refresh:disabled {
-        cursor: default;
-        opacity: 0.6;
-      }
-
-      .refresh svg {
-        width: 14px;
-        height: 14px;
-      }
-
-      .refresh.loading svg {
-        animation: spin 0.7s linear infinite;
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      .group-year {
+      h2 {
         font-size: 13px;
         font-weight: 600;
         letter-spacing: 0.06em;
         text-transform: uppercase;
         color: var(--faint);
-        margin: 36px 0 4px;
+        margin: 40px 0 12px;
       }
 
-      article.item {
-        padding: 18px 0;
+      /* ---- share list ---- */
+      .share {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 0;
         border-top: 1px solid var(--line);
       }
 
-      .item-title {
-        font-size: 17px;
+      .share:last-of-type {
+        border-bottom: 1px solid var(--line);
+      }
+
+      .share-main {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .share-name {
         font-weight: 600;
-        line-height: 1.35;
+        font-size: 16px;
+      }
+
+      .share-name a {
+        color: var(--ink);
+        text-decoration: none;
+      }
+
+      .share-name a:hover {
+        color: var(--accent);
+      }
+
+      .share-link {
+        font-size: 13px;
+        color: var(--faint);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .icon-btn {
+        flex: none;
+        font: inherit;
+        font-size: 13px;
+        color: var(--muted);
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 7px 11px;
+        cursor: pointer;
+        transition: border-color 0.15s ease, color 0.15s ease;
+      }
+
+      .icon-btn:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      .icon-btn.danger:hover {
+        border-color: #c0392b;
+        color: #c0392b;
+      }
+
+      /* ---- add form ---- */
+      form {
+        margin-top: 8px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        color: var(--muted);
         margin: 0 0 4px;
       }
 
-      .item-title a {
+      .field {
+        margin-bottom: 14px;
+      }
+
+      .field:last-child {
+        margin-bottom: 0;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        font: inherit;
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #fff;
         color: var(--ink);
-        text-decoration: none;
-        background-image: linear-gradient(var(--accent), var(--accent));
-        background-size: 0% 1px;
-        background-position: 0 100%;
-        background-repeat: no-repeat;
-        transition: background-size 0.2s ease, color 0.2s ease;
       }
 
-      .item-title a:hover {
-        color: var(--accent);
-        background-size: 100% 1px;
+      input:focus {
+        outline: none;
+        border-color: var(--accent);
       }
 
-      .meta {
-        font-size: 14px;
-        color: var(--muted);
-        margin: 0 0 8px;
-      }
-
-      .meta .pub {
-        font-style: italic;
-      }
-
-      .meta .dot {
-        color: var(--faint);
-        margin: 0 6px;
-      }
-
-      .abstract {
-        font-size: 14.5px;
-        color: #333;
-        margin: 8px 0 0;
-        max-width: 64ch;
-      }
-
-      .abstract.clamped {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .more {
-        display: inline-block;
-        font-size: 13px;
-        color: var(--accent);
-        cursor: pointer;
-        margin-top: 4px;
-        user-select: none;
-      }
-
-      .tags {
-        margin-top: 10px;
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-      }
-
-      .tag {
+      .hint {
         font-size: 12px;
-        color: var(--muted);
-        background: #f0f0ee;
-        padding: 2px 8px;
-        border-radius: 999px;
+        color: var(--faint);
+        margin: 4px 0 0;
       }
 
-      .type-badge {
-        display: inline-block;
-        font-size: 11px;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-        color: var(--faint);
-        margin-bottom: 6px;
+      button.primary {
+        font: inherit;
+        font-weight: 600;
+        color: #fff;
+        background: var(--accent);
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        padding: 10px 18px;
+        cursor: pointer;
+      }
+
+      button.primary:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      .msg {
+        font-size: 13px;
+        margin: 12px 0 0;
+        min-height: 18px;
+      }
+
+      .msg.error {
+        color: #c0392b;
+      }
+
+      .msg.ok {
+        color: #1e7e34;
       }
 
       .state {
         color: var(--muted);
         font-size: 15px;
-        padding: 48px 0;
-        text-align: center;
-      }
-
-      footer {
-        margin-top: 64px;
-        padding-top: 20px;
-        border-top: 1px solid var(--line);
-        color: var(--faint);
-        font-size: 12.5px;
+        padding: 24px 0;
       }
 
       @media (max-width: 600px) {
@@ -286,72 +237,41 @@
   </head>
   <body>
     <div class="wrap">
-      <header class="page">
-        <h1 id="page-title">Reading list</h1>
-      </header>
+      <h1>Shared collections</h1>
+      <p class="subtitle">Each collection below is an unlisted link you can share with collaborators.</p>
 
-      <div class="controls" hidden id="controls">
-        <input type="search" id="search" placeholder="Filter by title, author, journal, tag…" autocomplete="off" />
-        <span class="count" id="count"></span>
-        <button class="refresh" id="refresh" type="button" title="Fetch the latest from Zotero (bypasses cache)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M21 12a9 9 0 1 1-2.64-6.36" />
-            <path d="M21 3v6h-6" />
-          </svg>
-          <span>Reload</span>
-        </button>
+      <h2>Shares</h2>
+      <div id="list">
+        <div class="state">Loading…</div>
       </div>
 
-      <main id="list">
-        <div class="state">Loading…</div>
-      </main>
+      <h2>Add a collection</h2>
+      <form id="add-form">
+        <div class="field">
+          <label for="name">Display name</label>
+          <input type="text" id="name" name="name" placeholder="e.g. Aging &amp; circadian rhythms" required />
+        </div>
+        <div class="field">
+          <label for="collectionKey">Zotero collection key</label>
+          <input type="text" id="collectionKey" name="collectionKey" placeholder="e.g. ABCD2345" required />
+          <p class="hint">The code after <code>/collections/</code> in the collection's Zotero web-library URL.</p>
+        </div>
 
-      <footer>Maintained in Zotero · Live</footer>
+        <button type="submit" class="primary" id="submit">Add collection</button>
+        <p class="msg" id="msg"></p>
+      </form>
     </div>
 
     <script>
-      // ---- Configure the page heading here (purely cosmetic) ----
-      const PAGE_TITLE = "Reading list";
-      const PAGE_SUBTITLE = "A curated set of references.";
-
-      // Optional chaining so removing either element can't crash the script
-      // (a thrown error here would halt everything below, incl. load()).
-      document.getElementById("page-title")?.replaceChildren(PAGE_TITLE);
-      document.getElementById("page-subtitle")?.replaceChildren(PAGE_SUBTITLE);
-      document.title = PAGE_TITLE;
-
       const listEl = document.getElementById("list");
-      const countEl = document.getElementById("count");
-      const controlsEl = document.getElementById("controls");
-      const searchEl = document.getElementById("search");
-      const refreshEl = document.getElementById("refresh");
-
-      let allItems = [];
-
-      function yearOf(date) {
-        const m = (date || "").match(/\b(1[5-9]\d{2}|20\d{2})\b/);
-        return m ? m[1] : "";
-      }
-
-      function formatCreators(creators) {
-        const names = (creators || [])
-          .map((c) => {
-            if (c.name) return c.name;
-            const last = c.lastName || "";
-            const initial = c.firstName ? `${c.firstName.trim()[0]}.` : "";
-            return [last, initial].filter(Boolean).join(", ");
-          })
-          .filter(Boolean);
-        if (names.length === 0) return "";
-        if (names.length <= 6) return names.join("; ");
-        return names.slice(0, 6).join("; ") + " et al.";
-      }
+      const formEl = document.getElementById("add-form");
+      const submitEl = document.getElementById("submit");
+      const msgEl = document.getElementById("msg");
 
       function el(tag, attrs = {}, ...children) {
         const node = document.createElement(tag);
         for (const [k, v] of Object.entries(attrs)) {
           if (k === "class") node.className = v;
-          else if (k === "html") node.innerHTML = v;
           else node.setAttribute(k, v);
         }
         for (const child of children) {
@@ -361,143 +281,104 @@
         return node;
       }
 
-      function renderItem(item) {
-        const article = el("article", { class: "item" });
-
-        if (item.itemType) {
-          article.append(
-            el("div", { class: "type-badge" }, item.itemType.replace(/([A-Z])/g, " $1").trim())
-          );
-        }
-
-        const titleNode = item.url
-          ? el("a", { href: item.url, target: "_blank", rel: "noopener" }, item.title)
-          : document.createTextNode(item.title);
-        article.append(el("h2", { class: "item-title" }, titleNode));
-
-        const metaParts = [];
-        const authors = formatCreators(item.creators);
-        const year = yearOf(item.date);
-        const meta = el("p", { class: "meta" });
-        if (authors) meta.append(authors);
-        if (year) {
-          if (authors) meta.append(el("span", { class: "dot" }, "·"));
-          meta.append(year);
-        }
-        if (item.publication) {
-          if (authors || year) meta.append(el("span", { class: "dot" }, "·"));
-          meta.append(el("span", { class: "pub" }, item.publication));
-        }
-        if (meta.childNodes.length) article.append(meta);
-
-        if (item.abstractNote) {
-          const abs = el("p", { class: "abstract clamped" }, item.abstractNote);
-          article.append(abs);
-          const isLong = item.abstractNote.length > 280;
-          if (isLong) {
-            const toggle = el("span", { class: "more" }, "Show more");
-            toggle.addEventListener("click", () => {
-              const clamped = abs.classList.toggle("clamped");
-              toggle.textContent = clamped ? "Show more" : "Show less";
-            });
-            article.append(toggle);
-          } else {
-            abs.classList.remove("clamped");
-          }
-        }
-
-        if (item.tags && item.tags.length) {
-          const tagWrap = el("div", { class: "tags" });
-          item.tags.forEach((t) => tagWrap.append(el("span", { class: "tag" }, t)));
-          article.append(tagWrap);
-        }
-
-        return article;
+      function shareUrl(slug) {
+        return `${location.origin}/c/${slug}`;
       }
 
-      function render(items) {
+      function renderList(collections) {
         listEl.innerHTML = "";
-        if (items.length === 0) {
-          listEl.append(el("div", { class: "state" }, "No matching references."));
-          countEl.textContent = "";
+        if (!collections.length) {
+          listEl.append(el("div", { class: "state" }, "No collections shared yet."));
           return;
         }
+        for (const c of collections) {
+          const url = shareUrl(c.slug);
 
-        countEl.textContent = `${items.length} reference${items.length === 1 ? "" : "s"}`;
+          const nameLine = el(
+            "div",
+            { class: "share-name" },
+            el("a", { href: `/c/${c.slug}`, target: "_blank", rel: "noopener" }, c.name)
+          );
+          const linkLine = el("div", { class: "share-link" }, url);
+          const main = el("div", { class: "share-main" }, nameLine, linkLine);
 
-        let lastYear = null;
-        for (const item of items) {
-          const year = yearOf(item.date) || "Undated";
-          if (year !== lastYear) {
-            listEl.append(el("div", { class: "group-year" }, year));
-            lastYear = year;
-          }
-          listEl.append(renderItem(item));
+          const copyBtn = el("button", { class: "icon-btn", type: "button" }, "Copy link");
+          copyBtn.addEventListener("click", async () => {
+            try {
+              await navigator.clipboard.writeText(url);
+              copyBtn.textContent = "Copied!";
+              setTimeout(() => (copyBtn.textContent = "Copy link"), 1200);
+            } catch {
+              copyBtn.textContent = "Copy failed";
+            }
+          });
+
+          const delBtn = el("button", { class: "icon-btn danger", type: "button" }, "Delete");
+          delBtn.addEventListener("click", async () => {
+            if (!confirm(`Delete "${c.name}"? The link will stop working.`)) return;
+            delBtn.disabled = true;
+            try {
+              const res = await fetch(`/api/collections?slug=${encodeURIComponent(c.slug)}`, {
+                method: "DELETE",
+              });
+              if (!res.ok) throw new Error();
+              row.remove();
+              if (!listEl.querySelector(".share")) renderList([]);
+            } catch {
+              delBtn.disabled = false;
+              delBtn.textContent = "Retry delete";
+            }
+          });
+
+          const row = el("div", { class: "share" }, main, copyBtn, delBtn);
+          listEl.append(row);
         }
       }
 
-      function matches(item, q) {
-        if (!q) return true;
-        const hay = [
-          item.title,
-          item.publication,
-          formatCreators(item.creators),
-          (item.tags || []).join(" "),
-        ]
-          .join(" ")
-          .toLowerCase();
-        return q
-          .toLowerCase()
-          .split(/\s+/)
-          .filter(Boolean)
-          .every((term) => hay.includes(term));
-      }
-
-      function applyFilter() {
-        const q = searchEl.value.trim();
-        render(allItems.filter((it) => matches(it, q)));
-      }
-
-      searchEl.addEventListener("input", applyFilter);
-
-      async function load({ force = false } = {}) {
-        // A unique query param + no-store busts both the browser cache and
-        // Vercel's edge cache, so "Reload" pulls fresh data straight from Zotero.
-        const url = force ? `/api/items?refresh=${Date.now()}` : "/api/items";
-        const res = await fetch(url, force ? { cache: "no-store" } : undefined);
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error || `Request failed (${res.status})`);
-        }
-        const data = await res.json();
-        allItems = data.items || [];
-        controlsEl.hidden = false;
-        applyFilter();
-      }
-
-      refreshEl.addEventListener("click", async () => {
-        refreshEl.disabled = true;
-        refreshEl.classList.add("loading");
+      async function loadList() {
         try {
-          await load({ force: true });
+          const res = await fetch("/api/collections");
+          if (!res.ok) throw new Error(`Request failed (${res.status})`);
+          const data = await res.json();
+          renderList(data.collections || []);
         } catch (e) {
-          countEl.textContent = "Reload failed";
+          listEl.innerHTML = "";
+          listEl.append(el("div", { class: "state" }, "Couldn't load shares. " + e.message));
+        }
+      }
+
+      formEl.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        msgEl.textContent = "";
+        msgEl.className = "msg";
+        submitEl.disabled = true;
+
+        const body = {
+          name: formEl.name.value.trim(),
+          collectionKey: formEl.collectionKey.value.trim(),
+        };
+
+        try {
+          const res = await fetch("/api/collections", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+          msgEl.textContent = `Added "${data.collection.name}".`;
+          msgEl.className = "msg ok";
+          formEl.reset();
+          await loadList();
+        } catch (err) {
+          msgEl.textContent = err.message;
+          msgEl.className = "msg error";
         } finally {
-          refreshEl.disabled = false;
-          refreshEl.classList.remove("loading");
+          submitEl.disabled = false;
         }
       });
 
-      (async () => {
-        try {
-          await load();
-        } catch (e) {
-          listEl.innerHTML = "";
-          listEl.append(
-            el("div", { class: "state" }, "Couldn't load references. " + e.message)
-          );
-        }
-      })();
+      loadList();
     </script>
   </body>
 </html>

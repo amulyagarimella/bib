@@ -1,20 +1,39 @@
-// Vercel Serverless Function.
-// Holds the Zotero read key server-side and forwards ONLY the configured
-// collection (and its nested subcollections) to the client. The API key
-// never reaches the browser.
+// Vercel Serverless Function (public).
+// Resolves a shared collection by ?slug=… from the registry, then forwards
+// only that collection (and its nested subcollections) to the client. The
+// Zotero API key is held server-side and never reaches the browser.
+
+import { getCollection } from "../lib/registry.js";
 
 const ZOTERO_API_BASE = "https://api.zotero.org";
 const PAGE_SIZE = 100; // Zotero's max per request
 
 export default async function handler(req, res) {
-  const userId = process.env.ZOTERO_USER_ID;
-  const collectionKey = process.env.ZOTERO_COLLECTION_KEY;
-  const apiKey = process.env.ZOTERO_API_KEY;
+  // Resolve the shared collection from ?slug=… via the registry.
+  const slug = (req.query?.slug || "").toString();
+  if (!slug) {
+    res.status(400).json({ error: "Missing collection." });
+    return;
+  }
 
-  if (!userId || !collectionKey || !apiKey) {
+  let entry;
+  try {
+    entry = await getCollection(slug);
+  } catch (err) {
+    res.status(500).json({ error: String(err.message || err) });
+    return;
+  }
+  if (!entry) {
+    res.status(404).json({ error: "Unknown collection." });
+    return;
+  }
+
+  const { name, collectionKey } = entry;
+  const userId = process.env.ZOTERO_USER_ID;
+  const apiKey = process.env.ZOTERO_API_KEY;
+  if (!userId || !apiKey) {
     res.status(500).json({
-      error:
-        "Server not configured. Set ZOTERO_USER_ID, ZOTERO_COLLECTION_KEY and ZOTERO_API_KEY.",
+      error: "Not configured. Set ZOTERO_USER_ID and ZOTERO_API_KEY.",
     });
     return;
   }
@@ -79,24 +98,21 @@ export default async function handler(req, res) {
   try {
     const collectionKeys = await gatherCollectionKeys(collectionKey);
 
-    // Fetch each folder's top-level items (skips attachments/notes), then
-    // merge. An item filed in several folders shows up once.
-    const byKey = new Map();
+    // Fetch each folder's top-level items (skips attachments/notes). Duplicates
+    // (an item in several folders, or the same work imported twice) are
+    // collapsed by the signature dedup below.
+    const raw = [];
     for (const key of collectionKeys) {
       const items = await fetchAll(
         `/users/${userId}/collections/${key}/items/top?format=json&include=data`
       );
-      for (const it of items) {
-        if (!byKey.has(it.key)) byKey.set(it.key, it);
-      }
+      raw.push(...items);
     }
-
-    const merged = Array.from(byKey.values());
-    merged.sort((a, b) => parseTimestamp(b.data?.date) - parseTimestamp(a.data?.date));
+    raw.sort((a, b) => parseTimestamp(b.data?.date) - parseTimestamp(a.data?.date));
 
     // Strip down to only the fields the frontend renders — nothing identifying
     // about the library or key leaks through.
-    const cleaned = merged.map((it) => {
+    const cleaned = raw.map((it) => {
       const d = it.data || {};
       return {
         key: it.key,
@@ -122,9 +138,8 @@ export default async function handler(req, res) {
       };
     });
 
-    // Content-level dedup. The key-based pass above only collapses one item
-    // filed in several folders; this collapses the SAME work that exists as
-    // multiple distinct Zotero items (imported twice, added from two sources).
+    // Dedup by content: collapse the same item filed in several folders AND the
+    // same work that exists as multiple distinct Zotero items (imported twice).
     // Signature = DOI when present, else normalized title + first author.
     const signature = (item) => {
       if (item.DOI) {
@@ -156,14 +171,14 @@ export default async function handler(req, res) {
       const sig = signature(item);
       const existing = bySignature.get(sig);
       if (!existing || completeness(item) > completeness(existing)) {
-        bySignature.set(sig, item); // replacing keeps the original sort position
+        bySignature.set(sig, item); // same key keeps the original sort position
       }
     }
     const deduped = Array.from(bySignature.values());
 
     // Cache at Vercel's edge so we don't hammer the Zotero API.
     res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=3600");
-    res.status(200).json({ items: deduped });
+    res.status(200).json({ name, items: deduped });
   } catch (err) {
     const status = err.status || 502;
     res

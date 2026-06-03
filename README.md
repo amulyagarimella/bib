@@ -1,70 +1,69 @@
-# bib — share one private Zotero collection
+# bib — share selected private Zotero collections as unlisted links
 
-A tiny site that renders the references in a **single** Zotero collection —
-flattened across any nested sub-folders — without creating or inviting anyone
-to a Zotero group.
+A small Vercel app to share **chosen** Zotero collections with collaborators —
+each as its own clean, unlisted page — without creating or inviting anyone to a
+Zotero group.
 
-A read-only Zotero API key lives server-side in a Vercel serverless function
-(`api/items.js`). The browser only ever sees the cleaned-up items for the one
-collection you configured — never the key, your username, or the rest of your library.
+- A **password-protected home screen** lists your shares and lets you add/remove
+  collections (registry stored in Vercel KV).
+- Each share gets a public, **unlisted** page at `/c/<slug>` rendering the
+  collection: nested sub-folders flattened, duplicates collapsed (by DOI / title),
+  a client-side filter, and a force-reload button.
+- A read-only Zotero API key stays server-side; the browser never sees it.
 
 ```
-index.html         static frontend (Valley Sans, client-side filter, reload button)
-api/items.js        serverless proxy; holds the key, recurses + flattens one collection tree
-assets/fonts/       bundled Valley Sans woff2 (SIL OFL — see OFL.txt)
-.env.example       the three values you need to set
+middleware.js        Basic Auth on "/" + "/api/collections"  (collection pages stay public)
+index.html           home: list shares, add/delete            (protected)
+collection.html      the reader, parameterized by /c/<slug>   (public, unlisted)
+vercel.json          rewrite /c/:slug → collection.html
+api/collections.js   GET list · POST add · DELETE remove       (registry CRUD)
+api/items.js         GET ?slug=… → fetch/flatten/dedup/notes   (public)
+lib/registry.js      Vercel KV (Upstash Redis) helpers
+assets/fonts/        bundled Valley Sans woff2 (SIL OFL)
 ```
 
-## 1. Get your Zotero values
+## Setup
 
-- **`ZOTERO_USER_ID`** — your numeric user ID, shown at
-  <https://www.zotero.org/settings/keys> ("Your userID for use in API calls is …").
-- **`ZOTERO_API_KEY`** — create a new key at
-  <https://www.zotero.org/settings/keys/new> with **read-only** library access.
-- **`ZOTERO_COLLECTION_KEY`** — open the collection in the
-  [web library](https://www.zotero.org/mylibrary); the key is the segment after
-  `/collections/` in the URL (an 8-character code like `ABCD2345`).
+### 1. Zotero
+- **`ZOTERO_USER_ID`** — numeric ID at <https://www.zotero.org/settings/keys>.
+- **`ZOTERO_API_KEY`** — a **read-only** key (same page → New Private Key).
+- A collection's **key** is the code after `/collections/` in its Zotero web URL.
 
-## 2. Run locally
+### 2. Vercel KV (registry store)
+In the Vercel dashboard → **Storage** → create a **KV / Upstash Redis** store and
+connect it to this project. That injects `KV_REST_API_URL` and `KV_REST_API_TOKEN`.
 
+### 3. Environment variables
+Set these in **Project → Settings → Environment Variables** (see `.env.example`):
+
+| Var | Purpose |
+| --- | --- |
+| `ADMIN_PASSWORD` | password for the home screen (required) |
+| `ADMIN_USER` | username for the home screen (optional, default `admin`) |
+| `ZOTERO_USER_ID` | your Zotero account |
+| `ZOTERO_API_KEY` | your read-only key |
+| `KV_REST_API_URL` / `KV_REST_API_TOKEN` | added by the KV store |
+
+### 4. Run / deploy
 ```bash
-npm i -g vercel        # if you don't have it
-cp .env.example .env.local   # fill in the three values
-vercel dev             # serves index.html + /api/items
+cp .env.example .env.local   # fill in values (KV vars come from `vercel env pull`)
+vercel dev                   # local
+vercel --prod                # production
 ```
+(Git-based deploys work too — push to the connected repo.)
 
-Open the printed localhost URL.
-
-## 3. Deploy to Vercel
-
-```bash
-vercel          # first run links/creates the project
-vercel --prod   # deploy to production
-```
-
-Then add the three environment variables in the Vercel dashboard
-(**Project → Settings → Environment Variables**) and redeploy, or run:
-
-```bash
-vercel env add ZOTERO_USER_ID
-vercel env add ZOTERO_COLLECTION_KEY
-vercel env add ZOTERO_API_KEY
-vercel --prod
-```
+## Using it
+1. Open the site → enter the admin password.
+2. **Add a collection**: give it a name + the Zotero collection key.
+3. Copy the unlisted `/c/<slug>` link and send it to collaborators — no password
+   needed to view a collection page.
 
 ## Notes
-
-- The page heading/subtitle are cosmetic — edit `PAGE_TITLE` / `PAGE_SUBTITLE`
-  near the bottom of `index.html`.
-- Responses are cached at Vercel's edge for 10 minutes
-  (`s-maxage=600, stale-while-revalidate=3600`) to stay well under Zotero's rate limits.
-  The **Reload** button bypasses that cache (unique query param + `no-store`) to pull
-  fresh data straight from Zotero on demand.
-- The page is set in **Valley Sans** (bundled woff2, SIL Open Font License). "Medium"
-  is mapped to every bold weight; Regular/Italic cover the rest, with `font-synthesis: none`
-  so the browser never fakes a weight or slant.
-- `<meta name="robots" content="noindex">` discourages search engines. This is
-  "unlisted," not access-controlled — anyone with the URL can view it. If you need
-  real auth, put it behind Vercel password protection or add a check in `api/items.js`.
-- A Zotero API key technically grants read access to your whole library, but the
-  key never leaves the server and the function only queries the one collection.
+- Collection pages are **unlisted, not access-controlled**: anyone with the link
+  can view (search engines are discouraged via `noindex`). Only the home/admin
+  screen is password-gated.
+- Stored per-collection API keys live in your private KV store and are never
+  returned to the browser.
+- Reader responses are edge-cached 10 min; the **Reload** button bypasses it.
+- Set in **Valley Sans** (bundled woff2, SIL Open Font License — see
+  `assets/fonts/OFL.txt`).
