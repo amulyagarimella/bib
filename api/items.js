@@ -122,9 +122,48 @@ export default async function handler(req, res) {
       };
     });
 
+    // Content-level dedup. The key-based pass above only collapses one item
+    // filed in several folders; this collapses the SAME work that exists as
+    // multiple distinct Zotero items (imported twice, added from two sources).
+    // Signature = DOI when present, else normalized title + first author.
+    const signature = (item) => {
+      if (item.DOI) {
+        const doi = item.DOI.trim()
+          .toLowerCase()
+          .replace(/^https?:\/\/(dx\.)?doi\.org\//, "");
+        if (doi) return "doi:" + doi;
+      }
+      const title = (item.title || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+      if (title && title !== "untitled") {
+        const a = item.creators[0];
+        const author = a
+          ? (a.lastName || a.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "")
+          : "";
+        return "title:" + title + "|" + author;
+      }
+      return "key:" + item.key; // nothing to match on — keep it as unique
+    };
+
+    // Prefer the richest copy when collapsing duplicates.
+    const completeness = (item) =>
+      (item.abstractNote ? 2 : 0) +
+      (item.url ? 1 : 0) +
+      (item.DOI ? 1 : 0) +
+      item.tags.length * 0.1;
+
+    const bySignature = new Map();
+    for (const item of cleaned) {
+      const sig = signature(item);
+      const existing = bySignature.get(sig);
+      if (!existing || completeness(item) > completeness(existing)) {
+        bySignature.set(sig, item); // replacing keeps the original sort position
+      }
+    }
+    const deduped = Array.from(bySignature.values());
+
     // Cache at Vercel's edge so we don't hammer the Zotero API.
     res.setHeader("Cache-Control", "s-maxage=600, stale-while-revalidate=3600");
-    res.status(200).json({ items: cleaned });
+    res.status(200).json({ items: deduped });
   } catch (err) {
     const status = err.status || 502;
     res
