@@ -1,0 +1,7 @@
+{
+  "name": "bib",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Share a single private Zotero collection via a Vercel serverless proxy."
+}
