@@ -314,8 +314,10 @@
       const PAGE_TITLE = "Reading list";
       const PAGE_SUBTITLE = "A curated set of references.";
 
-      document.getElementById("page-title").textContent = PAGE_TITLE;
-      document.getElementById("page-subtitle").textContent = PAGE_SUBTITLE;
+      // Optional chaining so removing either element can't crash the script
+      // (a thrown error here would halt everything below, incl. load()).
+      document.getElementById("page-title")?.replaceChildren(PAGE_TITLE);
+      document.getElementById("page-subtitle")?.replaceChildren(PAGE_SUBTITLE);
       document.title = PAGE_TITLE;
 
       const listEl = document.getElementById("list");
